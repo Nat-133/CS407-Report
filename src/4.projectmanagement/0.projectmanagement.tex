@@ -1,0 +1,78 @@
+\chapter{Project Management}
+Due to the complexity and size of the project, it was incredibly important to maintain cohesion within the group and ensure all group members were equally supported. This section goes into detail in how this was achieved and maintained throughout the lifetime of the project starting in term 1. Despite some work having been done before the start of this academic year, it was not fully structured and lacked the comprehensive approach developed at the formal inception of the project.  
+
+\section{Methodology}
+% Feature Driven Development - over scrum / other agile
+Several methodologies were considered  going into the project. These came from very different perspectives, but all were weighed against the project's specific requirements as well as the team's experience.
+
+One of the first methods considered was Scrum\cite{ScrumGuide}, an agile methodology that splits work into short 'sprints', each one focused on a small section of work described by user stories. Because of this, Scrum is incredibly user-focused, prioritising their interactions with the system over specific implementation details. Scrum is also good at adapting to rapidly changing requirements, or when the requirements aren't formally set in stone or defined early on (such as when a user may not know quite what they want). This is useful when dealing with non-technical customers, but can be liable to scope creep if customer expectations aren't carefully managed. Despite this, because this project heavily focuses on a back-end system that users don't directly interact with, the decision was made that using Scrum would be a poor fit as user stories wouldn't easily mesh with the work being carried out.
+
+Another methodology considered was Extreme Programming (XP)\cite{XP}. Similar to Scrum, XP is an agile process that has proven itself in industry. However, where Scrum focuses on user stories, XP focuses on communication, both from the project team to the customer, and between team members. The idea is to keep the design simple and receive constant feedback on completed work that is submitted in small, frequent, packets. While XP was created in order to deal with constant requirement changes, it was thought that the focus on communication could prove extremely useful in the small team setting of this project. However, in the end it was decided that other methodologies would fit better with the project, as communication could still be enforced with other methodologies and XPs approach to communication is not dependent on the rest of XP.
+
+Despite its assumed obsolescence in most software projects, the Waterfall method was also discussed as a possibility. Waterfall's main feature is that development steps are segmented at the start, and research is all front-loaded. This seemed desirable at first due to the static nature of the project's requirements. However, it soon became evident that it would be incredibly inefficient to theorise about implementation details without properly testing anything. While some team members had experience in similar problem domains to the project, the specifics were new to everyone, and so designing the system upfront would have led to significant complications later. Up-front research was still necessary, but could be more easily managed when broken down into prioritised sections and done over a longer time-frame, allowing non-priority work to be addressed later.
+
+The methodology the team chose was Feature Driven Development(FDD)\cite{FDD}. As the name suggests, this focuses on the features and functionality of the final system. The project is broken down into a feature-set that can then be organised based on priority and dependencies. It is a similar process in Scrum, but replaces user interactions with concrete features. While implementation details are still left vague, features can be far more specific, and not necessarily user-focused. FDD is ideal for this project as elements within the project are largely discrete (e.g. different mesh partitioning strategies are largely independent of each other, as is the PGAS framework from mesh partitioning). In addition, given the statically scoped nature of the project, FDD does not add additional overhead in repeatedly checking or re-evaluating changing customer requirements (though changes in feature list are still possible),  reinforcing it as the ideal development methodology. 
+
+Despite Feature Driven Development being useful in organising work packets, it was decided that prioritising and communicating work status could still be improved. To this end, kanban\cite{Kanban} was chosen in order to easily identify bottlenecks and track work progress. Kanban solves the issue of `too much information', especially at the start of the project when there are many tasks to do, Kanban breaks down the large work volume into manageable tickets so that each feature can be dealt with one at a time. It also prevents miscommunication where two team members are working on the same area without realising. Because of this, Kanban is a great fit for the project and team.
+
+\section{Team Organisation}
+\subsection{Team Roles}
+While the team was highly collaborative, it did not remove the need for team roles and responsibilities. While the work of each team member changed and moved around frequently, each had a defined responsibility to ensure no task was overlooked. These provided accountability so that there was always at least one person catching problems/errors in each domain. The roles are listed below:
+
+\begin{itemize}
+  \item Project Manager: Nick Walker
+  \begin{itemize}
+      \item Track and ensure project progress 
+      \item Manage and organise meetings and note taking
+      \item Steer project direction
+      \item Organise collaboration and inclusion
+  \end{itemize}
+  \item Product Manager: Ben Metzger
+  \begin{itemize}
+      \item Ensures code-base validity 
+      \item Terminology standardisation
+      \item Code format standardisation
+      \item Documentation standardisation
+  \end{itemize}
+  \item System Architect: Jan Piskorski
+  \begin{itemize}
+      \item Final Decision maker on internal architecture
+      \item Visualise the global system interaction
+      \item Ensure code interoperability
+  \end{itemize}
+  \item Performance Engineer: Nat Manley
+  \begin{itemize}
+        \item Responsible for porting of performance measurements
+      \item Track performance bottlenecks
+      \item Prioritise performance improvements
+      \item Model \& optimise halo synchronisation
+  \end{itemize}
+\end{itemize}
+
+\subsection{Meetings and Communication}
+Because the work was so interlinked between team members, effective communication was paramount. To ensure that all members were aware of the other members' progress and decisions, weekly meetings were held at all points during the project, although this was flexible based on project and work contexts. These meetings served as key information sharing and problem solving sessions, ensuring both conformity in understanding of and approach to the project. They also highlighted areas in need of further research when questions were asked that one member had overlooked in their work. 
+
+While the final responsibility for organising meetings and keeping them on track fell to the project manager, any team member could call for an extra meeting or suggest topics for discussion. Additionally, the whole team did not have to be at every meeting; frequently, a sub-team would meet on their own for collaborative working or pair programming. Before every meeting, an agenda was always set so that the time was focused and did not get derailed by speculation on unnecessary topics. This ensured meetings were as productive as possible which was incredibly important due to the different schedules of team members.
+
+\section{Tools and Software}
+\subsection{Git}
+Since the project involved coding and producing documentation on different machines and then combining the outcomes, effective version control was essential.
+
+Git was chosen as the tool as it is a de-facto standard used by the majority of the software projects \cite{stackoverflow_developer_survey}. Every change used a different branch, with merge requests being checked and approved by at least one other team member first (in accordance with code standardisation practices as specified by the product manager). This ensured that knowledge was distributed and a single person wasn't the only person to understand any one part of the codebase. Thorough standardised documentation was maintained on top of this, but as documentation can take a large amount of time to digest, it was proven to be no substitute for direct experience.
+% Jira - Kanban, Git
+
+\subsection{GitHub}
+Github was chosen as a service to host the project repositories, of which there were multiple. There was a repository for notes, a fork of the OP2 library to be worked on, and other small repositories for side experiments and tests. They were all located in a Github Organisation account, with each of the group members having full access to the repositories. Github is the most popular software version control platform by a large margi\cite{stackoverflow_developer_survey}. While other platforms, such as Gitlab and Bitbucket enjoy some popularity in the professional field, all the project members had former experience with Github. The conclusion was that a reliable and familiar version control platform was a priority over anything else, and as the main OP2 repository is located on GitHub as well, the decision was simple.
+
+\subsection{Jira} 
+Initially, GitHub projects was used as a project management tool. However, it soon became apparent that it would not be suitable going forward due to its more limited feature set. Because of this, the team transitioned to Jira Software\footnote{https://www.atlassian.com/software/jira} over the christmas break. This allowed us to track issues, changes, and missing features for the project. All tickets were linked to an `epic', an overarching goal, that allowed the team to easily identify what task is most important in the moment for whatever section of the project they were working on.
+
+
+\section{Schedule}
+The project's original schedule is set out in \ref{appendix:Gantt_chart_original}. This Gantt chart left some flexibility to adapt to new information, and made time for work that, after testing, was determined to be unnecessary. Term 1 focussed on research and gaining familiarity with the libraries used so that work on OP2 would not be marred by the propagation of poor design choices made at the start. This initial development time increased our development speed later on in the final implementation. 
+
+Term 2 tasks were primarily focussed on the design and implementation of the primary components. Despite the parellelisation difficulties of this project (due to the interlinked nature of the codebase), there were still opportunities to break up work between the two teams. There was a slight imbalance in work in the initial schedule, however this was intended as more of a guide rather than a concrete structure, and so individual work was inteded to be more flexible (allowing teams to borrow members as needed).
+
+\subsection{Issues}
+Over the course of the implementation of design 1, it was found to be far more involved than expected. Numerous errors were discovered and the development process was severely delayed. Because of this, the second half of term 2 was largly devoted to this, and both teams worked on the implementation instead of working on separate tasks. This pooling of resources allowed more eyes on the problem, and helped the team catch errors more easily. Design 1 was finished during the Easter break, but because of the redundancy left in the original gantt chart (\ref{appendix:Gantt_chart_original}), this still left enough time to complete the deliverables, only delaying the completion by one week compared to the original schedule. The schedule was updated as the team progressed, and reviewed at the weekly meetings, this final gantt chart can be seen in \ref{appendix:Gantt_chart_new}.
+

@@ -1,0 +1,29 @@
+\section{UPC++}
+% Overview of UPC++
+
+\subsection{Background}
+% From where why
+
+\subsection{Fundamentals}
+% How it works
+
+\subsection{TODO Sections}
+
+UPC++ is the modern successor to UPC that uses C++ and brings several key changes\cite{UPC++_Performance}:
+\begin{itemize}
+    %\item Almost all operations are non-blocking, and it encourages applications to build in asynchronity
+    \item The majority of operations are non-blocking, which encourages implementing asynchronous applications
+    \item All communication is explicit - there is no implicit data motion
+    \item Encourages use of scalable data structures and avoids non-scalable library features.
+    \item Supports Remote Procedure Calls (RPC)
+    \item Interoperates smoothly and efficiently with MPI, OpenMP, CUDA, ROCm HIP, etc...
+\end{itemize}
+
+
+
+In order to support this new functionality, UPC++ uses the new GASNet-Ex communication middleware layer. In comparison to MPI RMA this has been shown to improve latency by on average 5\% and up to 25\%. The bandwidth capability was  also improved by up to 33\%\cite{UPC++_Performance}.
+
+Another significant benefit of UPC++ over its predecessor is it's use of RPC. RPC enables a caller to induce a remote process to invoke an arbitrary user function and arguments and return the results to the sender\cite{UPC++_Programmers_Guide}. 
+This gives programmers a high degree of control over data execution and can be more efficient than requesting such an operation through a shared medium, creating an efficient and expressive duality with RMA\cite{UPC++_Performance}.
+
+Arguably, the primary benefit of UPC++ is the removal of any implicit data motion. Enforcing explicit data motion ensures programmers are fully aware of any memory operations they may be inducing and thus are considerate of any performance and parallelisation implications. Such requirements may not modify the maximal speed of the application or communication layer operations, but they do increase the likelihood that programs written in UPC++ are not causing unnecessary slow memory transactions that bottleneck the total throughput of the application. 

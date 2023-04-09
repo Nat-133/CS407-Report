@@ -1,0 +1,33 @@
+\chapter{Groundwork}
+% Why was groundwork necessary?
+
+% What did groundwork entail?
+
+\section{Prototypes}
+%% Justification of prototypes
+% Simpler problem - 
+% Fail fast
+% Why no third
+In the specification, three potential prototypes were proposed but the third was already seen to be essentially infeasible and unnecessary at the time. This thinking proved correct and as such the two prototypes the team tackled are described.
+
+\subsection{Matrix Transpose}
+% Definition of problem - why it was chosen
+A distributed matrix transposition was deemed to be an ideal problem for learning how to best use the GPI API. While the operation itself was trivial and easily understood by the team, distributing and communicating data between processes using GPI presented a level of challenge suitable for familiarisation with new functionalities. Therefore the focus while programming was not necessarily on optimal or efficient code, but code that allowed for constructive use of GPI.
+
+% Overview of implementation strategies
+While the team implemented the prototype in differing ways, the implementations all shared similarities in their style of communication of data utilising the basic communication calls \texttt{gaspi\_write\_notify()} and \texttt{gaspi\_read()} as well as synchronisation primitves such as \texttt{gaspi\_notify\_waitsome()}. This enabled key insights into unexpected behaviours in the notification system not adequately explained in the specifications, which otherwise may have been harder to identify on the significantly more complex OP2 codebase.
+
+% Issues faced / findings
+In scaling the problem, the team identified inconsistent issues with memory crashes on creating GASPI segments of sufficiently large size, a potentially significant issue under the context of the the vast meshes under OP2. While the root cause of this issue was not found (seemingly a problem with the GPI implementation of the \texttt{gaspi\_segment\_create()} function), it was discovered that allocating memory first and then registering it as a GASPI segment was an equivalent reliable method.
+
+\subsection{Mandelbrot}
+% Definition of problem - why it was chosen
+As stated previously, a highly useful aspect of the GPI API is the MPI interoperability it offers, allowing both communication methods to be used in the same program, allowing for a gradual change of a program from MPI to GPI. Familiarisation with this functionality would make starting on the OP2 codebase more straightforward, otherwise requiring a more complete overhaul before testing. As a generally more complex program it also enabled the use of a greater number of GPI functions, furthering the teams understanding.
+
+For this reason, an existing distributed MPI program was chosen, an implementation of a Mandelbrot set visualiser. By choosing an existing program, we could ensure correct and efficient inter-operation via comparison of output and performance of the MPI version with the MPI-GPI version.
+
+With the direct comparison available with MPI, the team found that the GPI interface was much leaner and provided less affordance for common tasks, with examples such as \texttt{MPI\_Allgather} requiring reproduction in GPI.
+
+% Overview of implementation strategies
+
+% Issues faced / findings

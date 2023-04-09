@@ -1,0 +1,58 @@
+\section{Memory Design 1}
+
+Due to the difficulties surrounding integration of GPI segments into an environment not developed for it, each design was broken down into two primary parts, the macro and the micro. The macro segmentation design was completed first and provides all basic information regarding the number, sizes and purpose of the segments. In addition, it includes related information regarding interoperability with OP2 and the potential side effects. Conversely, the micro segmentation design relates to the structure and layout of data inside the segments. This also involves how processes are able to acquire remote offsets before sending data (a requirement for GPI). The micro design also outlines it's direct memory layout and the effects on caching. 
+
+%This first design is the simplest, with a minimal set of changes to OP2. While it may not have optimal performance, it provides a working solution and a basis for the second if necessary.
+
+\subsection{Macro Design}
+This first design takes a naïve approach to resolving the problem around the Array of Structs. It allocates one segment for each of the halo types (enh, eeh, ieh, inh), as well as a segment for miscellaneous data. As GPI is a lean API, this miscellaneous segment will be used for utility operations such as \texttt{Allgather} that aren't part of the GASPI specification. For the export/send process, data is copied and packed via a \texttt{memcpy} call from the local non-segment memory into the segment before the write request is sent (mimicking the MPI process). The structuring of data inside the segment is not important for reasons that will be explained later.
+
+For the import/receive system, the data arrives in the associated import segment and the process is notified of it's presence. Once all of core is computed, a \texttt{gaspi\_notify\_waitsome} loop is initiated that waits for the notification from each remote rank for each \texttt{op\_dat}. Upon arrival the memory is copied from the segment into the associated \texttt{op\_dat->data} array.  Due to the utilisation of \texttt{memcpy} the structuring is not important as this can re-order elements/sections as necessary to be in-line with the MPI version. (No reordering is necessary for the simplest version, but the design allows for future optimisation).
+
+The performance implications of this design could be significant. Where the MPI system is able to immediately continue in the primary compute loop after receiving data, the GPI system must instead begin copying data from one memory location to another, potentially adding significant time to the critical path. 
+
+However, it is difficult to assess the performance impact of the \texttt{memcpy} calls for several reasons. The first is because of the effect of communication time, if the network time is more than the core compute time, then the \texttt{memcpy} calls can be hidden, this is system dependent and can be variable. Another factor is the distribution in the time of message receives from foreign ranks, as this affects the possible overlap of the \texttt{memcpy} calls an waiting on other ranks' notifications (e.g. a slow rank allowing the majority of the data to be copied out of the segment before their notification arrives).
+
+Copy speed relative to the Core compute time is another important factor, as if the data size is small and the caches are hot then memory times will be minimal. Cache temperature is affected by both temporal and spatial locality with respect to the \texttt{op\_dat->data} layouts, which will be explored in the micro design.
+
+\subsection{Micro Design}
+This section outlines the design considerations for the: segment size, segment memory layout, data pre-exchanges, and the notification system. It also covers the likely performance impact of each decision made. 
+
+\subsubsection{Segment Size}
+The first issue facing the micro design is to know how large the segments must be. For OP2 with C++ 11 and above, there is `no' restriction on the number of possible arguments to the user defined kernel, and by implication the \texttt{op\_par\_loop}. As each \texttt{op\_arg} is used to represent an \texttt{op\_dat}, potentially all \texttt{op\_dat}s in the \texttt{op\_dat\_list} may need to be exchanged for each iteration in the \texttt{op\_par\_loop}. For this reason, the segments must be large enough to store all of the eeh, enh, ieh, inh information for all dats. 
+
+This means we can't easily reduce the segment size to improve caching. But it does make the solution substantially simpler.
+
+Thus, segment sizes can simply be defined as:
+\begin{gather*}
+\text{size}(x) = \sum_{d}^D d_x\\
+\text{for } x \in \{eeh,enh,ieh,inh\},\;d \in D
+\end{gather*}
+where $d$ is an \texttt{op\_dat} and $D$ is the \texttt{op\_dat\_list}.
+\subsubsection{Segment Memory Layout}
+
+\texttt{op\_exchange\_halo} is the current MPI implementation to exchange halo elements for a given \texttt{op\_arg}, i.e. an \texttt{op\_dat}. Thus it is best to mimic this current structure in the memory layout of the segments to improve performance. 
+
+We will employ `dat major ordering'; inside each segment, the data is firstly broken down by dat regions. In each dat region there are $n$ rank subsections containing the data for each rank with regards to that dat.  
+
+This simplifies the move to GPI as we can mostly keep the \texttt{op\_gpi\_exchange\_halo} functionality similar to the MPI equivalent. It also improves locality of reference by keeping as much of that dat's segment information in L1/L2 as possible during halo exchange, thus assisting the prefetcher and reducing the number of pages we have to traverse.
+
+\subsubsection{Data Pre-exchange}
+Unlike MPI, GPI requires that the sending process know the virtual address of the send location (relative to the start of the segment) on the receiving process. This adds an extra level of complexity that must be dealt with during the initialisation phase. This is due to the fact that neighbouring ranks will have other neighbours that the local rank has no knowledge of, resulting in different segments and different offsets. The location of data on a rank is determined by how many neighbours that rank has, as well as the size of the halos required, all of these factors can differ between ranks.
+
+An advantage of GPI is that MPI can be used to solve this problem instead of needing an extra segment. As this is limited the initialisation step, it is not a priority to fully utilise GPI in order to evaluate performance and is far simpler to instead leverage MPI's more comprehensive infrastructure. %Another finding we had during prototyping
+
+During initialisation, each rank can first calculate where they'd like to receive the data for each dat (and rank). This information can then be sent with an async write to each neighbour. Upon the receipt of this information, the process can store the information for each dat, along with storing the required address for \texttt{memcpy} calls in the data array. This information can then be used to move data from the import segment into the \texttt{op\_dat->data} array. 
+
+\subsubsection{Notifications}
+Notifications in GPI contain only an \texttt{id} value, and a \texttt{value} value... I.e. 2 32-bit integers. Importantly, \texttt{gaspi\_notify\_waitsome} waits on an ID region, and requires that \texttt{value} be nonzero.
+
+Communication of all the data involved in halo exchange requires a large volume of network messages (one for each dat on each rank). Therefore, upon receipt of a notification, a process must be able to not only uniquely identify where the information was sent from, but also to which dat it belongs as the same rank may be sending many messages to another. 
+
+In GPI, the \texttt{id} value can be used to store the \texttt{op\_dat->idx} value so that the dat can be uniquely identified. This is so that the functionality of \texttt{op\_mpi\_waitall(op\_arg *arg, int exec\_flag)} can be directly mimicked with GPI. This enables waiting on just one dat with the \texttt{gaspi\_notify\_waitsome}, greatly improving the speed and complexity of the lookup mechanism by reducing the search space. The \texttt{waitsome} call then can be repeated for each expected rank, as the sending rank value can be stored in the \texttt{value} field of the notification.
+
+\subsection{Design 1 Summary}
+%TODO: quick summary of advantages and drawbacks
+Design 1 aims to minimise the number of changes to the existing codebase, allowing maximal reuse of the MPI logic. It allocates one segment for each halo type, as well as an additional miscellaneous segment. This design requires additions to the underlying data structures, as \texttt{memcpy} will be used to pack data into the segments for transfer when necessary. This is a potentially large overhead being added to the critical path, although its effect on performance could potentially be hidden depending on network speeds.
+
+Overall, this design doesn't hinder maintainability when compared to the MPI version, but there is a potentially significant \texttt{memcpy} delay.

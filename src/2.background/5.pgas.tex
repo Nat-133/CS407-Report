@@ -1,0 +1,50 @@
+\section{Partitioned Global Address Space (PGAS)}
+% Overview
+Alternate approaches to distributed computing and memory management ameliorate some of the issues associated with MPI. One such approach, Partitioned Global Address Space (PGAS), is built around every process being able to access an abstract shared address space that is physically distributed across the constituent nodes of the system. There are multiple benefits to this model including:
+\begin{itemize}
+    \item Logical ease of implementing a shared memory model rather than dealing with the semantics of message passing.
+    \item Primarily one-sided asynchronous communication reduces the amount of time processes spend blocking or waiting for synchronisation, reducing idle computation time. 
+\end{itemize}
+
+%Brief brief into to PGAS. -> designed to get around limitations of MPI.
+%overview of PGAS.
+In particular, a PGAS memory model can break up the virtual address space into private (local only) and shared (addressable by all) memory. These shared regions can be partitioned so as to distribute the memory and compute requirements evenly across all nodes per the programmers discretion. With this memory model, communication can be moved from vast two-sided synchronisation to one-sided asynchronous communication with the potenial of improving both performance and ease of implementation. 
+% Often v easy to write stuff. Is easier for the programmer to think about shared memory just like it's a thread model. though libraries like GASPI may be more involved to enforce goodness...
+
+A thread under the PGAS memory model works much in the same way as a local shared memory model would. The virtual address space is partitioned and `pinned' to various processes or or (network) nodes' physical memory. This enables threads to access memory of other threads more easily, in some implementations without any
+% (dependant on implementation) any 
+synchronisation with the remote host. Shared memory programming for Inter-Process Communication(IPC) is commonplace in modern application programming and is far simpler to comprehend for the programmer than the nuances of implementing an effective message passing system. In turn, the skills required to implement such a system are both abundant and easy to learn, thus providing a significant benefit for the PGAS model over standard MPI. 
+% However, this ease of development is highly implementation(library) specific and will vary significantly as is clear in the following subsections. 
+However, as made clear in sections below, this ease of development is highly variable and specific to the PGAS library used.
+
+% Mention something about NUMA? Means accessing data locally is faster, rather than other model that all memory accesses are equally slow?
+
+%Stuff about reductions and collective operations \cite{PGAS_CollectiveOpsTuning}
+Similarily to MPI, collective operations, such as reductions and broadcasts, can be used in PGAS as well. While it brings a different set of challenges than when used with message passing, it can deliver scalable performance, as assessed in \cite{PGAS_CollectiveOpsTuning}. 
+
+\subsection{PGAS Tools}
+% Compare PGAS tools/languages/libraries/whatever
+
+% =================================
+% ============== UPC ==============
+% =================================
+\subsubsection{UPC}
+Classic implementation is UPC.
+
+
+
+% Wrap-up paragraph about UPC??
+% ==================================
+% ============= UPC++ ==============
+% ==================================
+\subsubsection{UPC++}
+Improvded by UPC++
+ 
+
+\subsubsection{GASPI}
+\label{SS:GASPI}
+%%%% WIP %%%%%% Use \cite{Evaluating_GASPI} for info stuff 
+
+Alternatively, got GASPI from Germany.
+
+%TODO paragraph to summarise GASPI

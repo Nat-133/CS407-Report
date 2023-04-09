@@ -1,0 +1,44 @@
+\documentclass[twocolumn,12pt]{report}
+\usepackage{preamble}
+% ---------------------------------------------------------------------------------
+% PREAMBLE IS IN preamble.sty ; please put any stuff in there to keep this clean :)
+% ---------------------------------------------------------------------------------
+\addbibresource{references.bib}
+
+\makeglossaries
+\input{glossary}
+
+\begin{document}
+
+\input{titlepage}
+\setcounter{secnumdepth}{0}
+
+\section{Abstract}
+Abstract!
+
+\section{Keywords}
+Keywords!
+
+\printglossaries
+
+\textbf{}
+
+\setcounter{secnumdepth}{3}
+\tableofcontents
+\include{src/1.introduction/0.introduction}
+\include{src/2.background/0.background}
+\include{src/3.projectinitiation/0.projectinitiation}
+\include{src/4.projectmanagement/0.projectmanagement}
+\include{src/5.technology/0.technology}
+\include{src/6.groundwork/0.groundwork}
+\include{src/7.design/0.design}
+\include{src/8.implementation/0.implementation}
+\include{src/9.evaluation/0.evaluation}
+\include{src/10.conclusion/conclusion}
+\include{src/11.futurework/futurework}
+
+\printbibliography
+
+\include{appendix}
+
+\end{document}

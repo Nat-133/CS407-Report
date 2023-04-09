@@ -1,0 +1,17 @@
+\section{Unstructured Mesh Algorithms}
+Unstructured mesh algorithms are a valuable tool in computational science. Their flexible geometry allows them to be used in a range of fields to solve complex partial differential equations via finite element methods \cite{FEM_PDESolutionsBook}. An unstructured mesh can be used to discretise a problem space so that a computational solution can be found. Application areas include mechanical engineering simulation, computational fluid dynamics, and computational electromagnetics \cite{OP2_Performance}. To achieve the required accuracy in the solution, an extremely high-resolution mesh with millions of segments is often required, which greatly increases the computational expense.
+
+These mesh algorithms are iterative in nature, and rely on local calculations between elements. Because of this, the meshes can't be split up naïvely to have calculations run independently in parallel as data dependencies exist between these partitions meaning communication between processes is required for correctness. Due to the size of the meshes, it is impractical to run the algorithms sequentially, even with high end processors, and so parallelism is necessary to improve performance. To achieve the optimum work load splits, mesh partitioning techniques can be used.
+
+\subsection{Mesh Partitioning}
+In order to distribute the computation across multiple processing units, the mesh itself must be split up into sections that each unit will work with. These sections can act largely independently on most elements, however at partition boundaries, elements will refer to others in other mesh partitions. Because of this, it is necessary to keep track of elements on the boundary, referred to as halos.
+
+A naïve approach would be to split the sections up into simple blocks with little regard for halo size. There is nothing about this approach that makes the solution invalid, but because halo sizes aren't considered, extra communication will be needed which will reduce performance.
+
+A better approach is to attempt to minimise halo sizes before computation to reduce communications, which can improve performance without changing the result of calculations.  On top of simply minimising the halo sizes, other constraints are considered as well such as maintaining roughly equal partition sizes so that one processor doesn't finish before the others and has to wait for other calculations to complete.
+
+\subsubsection{Mesh Partitioners}
+The current OP2 implementation supports mesh partitioning with two libraries: ParMETIS \cite{ParMETIS} and (PT-)Scotch \cite{PTScotch}. These improve the default partitioning, producing a more optimal partitioning schema that minimises halos and by extension the volume of redundant communication.
+
+These libraries are optional, and while they improve the performance of the resulting code, OP2 works perfectly well without them. This follows the OP2 principal of modularity, allowing these additional features to be swapped in and out as required.
+

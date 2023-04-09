@@ -1,0 +1,41 @@
+\section{Memory Design 2}
+To address the drawbacks of the previous design, this more advanced and complicated design restructures key OP2 elements to more optimally align them to GPI, enabling greater utilisation of its modern communication middleware layer. 
+
+The primary point of concern from the previous design was the \texttt{memcpy} delay on the critical path. To avoid this, we intend to modify the memory lookup mechanism in the primary compute loops to conditionally change the data pointers to inside the segment so as to jump into the segment, rather than copying into 
+This design would modify the \texttt{op\_dat} struct as follows:
+
+\begin{lstlisting}[language=C]
+typedef struct {
+  int index;
+  op_set set; 
+  int dim, 
+      size;
+  char *data,       // Core+EEH
+#ifdef GPI_MEM
+       *import_data,// IEH+INH
+#endif
+      *data_d;      
+  char const *type, 
+      *name;        
+  char *buffer_d;   
+  char *buffer_d_r; 
+  int dirtybit;     
+  int dirty_hd;     
+  int user_managed; 
+  void *mpi_buffer; 
+} op_dat_core;
+
+typedef op_dat_core *op_dat;
+\end{lstlisting}
+
+Note that in this struct, the contents of the \texttt{data} member has been changed to only the local elements on the host, and the import elements have been split from this into a separate \texttt{import\_data} member.
+
+The new \texttt{import\_data} pointer can now point to the relevant GPI import segment at the pre-calculated offset - entirely removing the necessity of a \texttt{memcpy} call in the primary compute loop. The cost of this is all the necessary changes to functions that utilise \texttt{op\_dat->data}, of which there are quite a few. The many modifications that this would require increase the complexity of the project considerably, as well as increasing the potential for errors.
+
+The functions that utilise \texttt{op\_dat->data} are those relating to \texttt{op\_dat}s and \texttt{op\_arg}s. \texttt{op\_arg}s are used as copies of \texttt{op\_dat} with some extra data when passed as an argument to an \texttt{op\_par\_loop} (primary compute loop function). Because of this, modifications would be required to functions that read and write from both the \texttt{op\_dat} and \texttt{op\_arg} structs. This includes initialisation functions (e.g. hdf5 setups), actual \texttt{op\_dat} declarations/setups, \texttt{op\_arg} declarations/setup, and naturally the halo creation and exchange code. 
+
+However, the most significant alteration would be for the \texttt{op\_arg\_set} and \texttt{op\_arg\_copy\_in} functions that are used inside \texttt{op\_par\_loop} to get each element of the sets one by one so that they can be passed to the kernel (the user defined function that acts on the sets). These argument functions would need to be changed to return a different pointer depending on the index given and the list sizes.
+
+These changes do add a minor overhead for all processing and argument passing. This should not alter performance significantly given our assumption regarding computation vs network speeds and the fact that look-ups are already non-trivial, but this would require physical testing once complete. 
+
+This different \texttt{op\_dat->data} architecture changes the cache hit model due to different ordering and structuring of addressing that may affect performance differently depending on the sizes of the caches. This GPI version uses two groups of long prefetchable lines (only assuming suitably ordered and packed elements as optimal ordering may be different than the setup for sending), whereas the MPI version utilises lots of successive shorter lines. Because of this, this second design requires a larger L1 cache to maintain hit rate,  pre-fetcher improvement may be marginal. 
